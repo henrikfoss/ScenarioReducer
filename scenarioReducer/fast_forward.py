@@ -34,10 +34,14 @@ class Fast_forward(Scenario_reducer):
         if round(np.sum(initProbs),2) != 1:
             raise ValueError('Probs must sum to one')
 
-    def reduce(self,distance,n_scenarios: int = 1):
+    def reduce(self, distance, n_scenarios: int = 1, fixed_idx: list[int] = []):
         """
         reduces the initial set of scenarios
         """
+
+        if len(fixed_idx) > n_scenarios:
+            raise ValueError('Number of scenarios to keep must be less than total number of scenarios')
+
         indxR = [] #indeces of the reduced set
         probs_initial = self.initProbs.copy() 
         #### computation of the distance matrix
@@ -53,9 +57,15 @@ class Fast_forward(Scenario_reducer):
         ##first indx
         u = np.nanargmin(zeta)
         indxR.append(u)
+
+        if fixed_idx:
+            for idx in fixed_idx:
+                if idx not in indxR:
+                    indxR.append(idx)
+
         ####
         ##Step i
-        for it in range(n_scenarios-1): #we already did the first
+        for it in range(n_scenarios-len(indxR)): #we already fixed scenarios in indxR
             #update the distance matrix
             dist_mtrx = np.minimum(dist_mtrx, dist_mtrx[u, :])
             probs_initial[indxR] = 0 #set zero chosen elements
